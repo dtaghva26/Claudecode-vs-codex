@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Code vs Codex</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      padding: 40px 24px 64px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .prompt {
+      font-size: 13px;
+      color: #8b949e;
+      margin-bottom: 40px;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    .section {
+      margin-bottom: 56px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #8b949e;
+      margin-bottom: 16px;
+    }
+
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .app-wrap {
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .app-label {
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      color: #c9d1d9;
+    }
+
+    .viewport-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .vp-btn {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #161b22;
+      color: #8b949e;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .vp-btn:hover { color: #e6edf3; border-color: #8b949e; }
+    .vp-btn.active { color: #e6edf3; border-color: #e6edf3; background: #21262d; }
+
+    .iframe-outer {
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    iframe {
+      width: 100%;
+      height: 520px;
+      border: none;
+      display: block;
+      background: #fff;
+      transition: width 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Claude Code vs Codex</h1>
+  <div class="prompt">Prompt: "Create a web-based todo list." &amp; "Create a calculator."</div>
+
+  <div class="viewport-toggle">
+    <button class="vp-btn" onclick="setViewport('375px')">Mobile</button>
+    <button class="vp-btn" onclick="setViewport('768px')">Tablet</button>
+    <button class="vp-btn active" onclick="setViewport('100%')">Desktop</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Todo List</div>
+    <div class="pair">
+      <div class="app-wrap">
+        <div class="app-label">Claude Code</div>
+        <div class="iframe-outer"><iframe src="claudecodescodes/claudecode.html"></iframe></div>
+      </div>
+      <div class="app-wrap">
+        <div class="app-label">Codex</div>
+        <div class="iframe-outer"><iframe src="codexcodes/codexcode.html"></iframe></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Calculator</div>
+    <div class="pair">
+      <div class="app-wrap">
+        <div class="app-label">Claude Code</div>
+        <div class="iframe-outer"><iframe src="claudecodescodes/calculator.html"></iframe></div>
+      </div>
+      <div class="app-wrap">
+        <div class="app-label">Codex</div>
+        <div class="iframe-outer"><iframe src="codexcodes/calculator.html"></iframe></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function setViewport(width) {
+    document.querySelectorAll('iframe').forEach(f => f.style.width = width);
+    document.querySelectorAll('.vp-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>
