@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .calc {
+      background: #16213e;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      width: 320px;
+    }
+
+    .display {
+      background: #0f3460;
+      border-radius: 14px;
+      padding: 20px 20px 14px;
+      margin-bottom: 20px;
+      text-align: right;
+      min-height: 96px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .display .expr {
+      font-size: 0.85rem;
+      color: #7a9cc0;
+      min-height: 20px;
+      word-break: break-all;
+      margin-bottom: 6px;
+    }
+
+    .display .value {
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      word-break: break-all;
+      line-height: 1.1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 500;
+      padding: 18px 8px;
+      cursor: pointer;
+      transition: filter 0.1s, transform 0.08s;
+    }
+
+    button:active { transform: scale(0.93); filter: brightness(0.85); }
+
+    .btn-num  { background: #1a1a4e; color: #e2e8f0; }
+    .btn-op   { background: #533483; color: #fff; }
+    .btn-eq   { background: #6c63ff; color: #fff; }
+    .btn-ac   { background: #e05252; color: #fff; }
+    .btn-util { background: #2d2d6e; color: #ccc; }
+
+    .span2 { grid-column: span 2; }
+  </style>
+</head>
+<body>
+  <div class="calc">
+    <div class="display">
+      <div class="expr" id="expr"></div>
+      <div class="value" id="value">0</div>
+    </div>
+    <div class="grid">
+      <button class="btn-ac span2" onclick="ac()">AC</button>
+      <button class="btn-util" onclick="backspace()">⌫</button>
+      <button class="btn-op"   onclick="op('/')">÷</button>
+
+      <button class="btn-num" onclick="digit('7')">7</button>
+      <button class="btn-num" onclick="digit('8')">8</button>
+      <button class="btn-num" onclick="digit('9')">9</button>
+      <button class="btn-op"  onclick="op('*')">×</button>
+
+      <button class="btn-num" onclick="digit('4')">4</button>
+      <button class="btn-num" onclick="digit('5')">5</button>
+      <button class="btn-num" onclick="digit('6')">6</button>
+      <button class="btn-op"  onclick="op('-')">−</button>
+
+      <button class="btn-num" onclick="digit('1')">1</button>
+      <button class="btn-num" onclick="digit('2')">2</button>
+      <button class="btn-num" onclick="digit('3')">3</button>
+      <button class="btn-op"  onclick="op('+')">+</button>
+
+      <button class="btn-util" onclick="toggleSign()">+/−</button>
+      <button class="btn-num"  onclick="digit('0')">0</button>
+      <button class="btn-num"  onclick="dot()">.</button>
+      <button class="btn-eq"   onclick="equals()">=</button>
+    </div>
+  </div>
+
+  <script>
+    let current = '0';
+    let justEvaled = false;
+    let exprStr = '';
+
+    // Two-level precedence state
+    let lowVal = null;   // accumulated +/- result
+    let lowOp  = null;   // pending + or -
+    let highVal = null;  // left side of pending * or /
+    let highOp  = null;  // pending * or /
+
+    const valEl  = document.getElementById('value');
+    const exprEl = document.getElementById('expr');
+
+    function render() {
+      valEl.textContent  = current;
+      exprEl.textContent = exprStr;
+    }
+
+    function digit(d) {
+      if (justEvaled) { current = d; exprStr = ''; justEvaled = false; }
+      else current = current === '0' ? d : current + d;
+      render();
+    }
+
+    function dot() {
+      if (justEvaled) { current = '0.'; exprStr = ''; justEvaled = false; }
+      else if (!current.includes('.')) current += '.';
+      render();
+    }
+
+    function op(o) {
+      justEvaled = false;
+      const cur = parseFloat(current);
+      current = '0';
+
+      if (o === '*' || o === '/') {
+        // High-priority: accumulate into highVal
+        highVal = highOp ? compute(highVal, highOp, cur) : cur;
+        highOp = o;
+      } else {
+        // Low-priority: first flush high, then flush low
+        const hResult = highOp ? compute(highVal, highOp, cur) : (highVal !== null ? highVal : cur);
+        highVal = null; highOp = null;
+        lowVal = lowOp ? compute(lowVal, lowOp, hResult) : hResult;
+        lowOp = o;
+      }
+
+      exprStr = buildExpr() + ' ' + displayOp(o);
+      render();
+    }
+
+    function equals() {
+      if (lowOp === null && highOp === null) return;
+      const cur = parseFloat(current);
+      const hResult = highOp ? compute(highVal, highOp, cur) : (highVal !== null ? highVal : cur);
+      const result  = lowOp  ? compute(lowVal,  lowOp,  hResult) : hResult;
+
+      exprStr = exprEl.textContent.replace(/ [+−×÷]$/, '') + ' ' + cur + ' =';
+      current = String(result);
+      lowVal = null; lowOp = null; highVal = null; highOp = null;
+      justEvaled = true;
+      render();
+    }
+
+    function buildExpr() {
+      if (lowVal !== null) return String(lowVal);
+      return '';
+    }
+
+    function compute(a, o, b) {
+      if (o === '+') return round(a + b);
+      if (o === '-') return round(a - b);
+      if (o === '*') return round(a * b);
+      if (o === '/') return b === 0 ? 'Error' : round(a / b);
+    }
+
+    function round(n) {
+      if (typeof n !== 'number') return n;
+      return parseFloat(n.toPrecision(12));
+    }
+
+    function displayOp(o) {
+      return { '+': '+', '-': '−', '*': '×', '/': '÷' }[o];
+    }
+
+    function ac() {
+      current = '0'; justEvaled = false; exprStr = '';
+      lowVal = null; lowOp = null; highVal = null; highOp = null;
+      render();
+    }
+
+    function backspace() {
+      if (justEvaled) return;
+      current = current.length > 1 ? current.slice(0, -1) : '0';
+      render();
+    }
+
+    function toggleSign() {
+      if (current === '0') return;
+      current = current.startsWith('-') ? current.slice(1) : '-' + current;
+      render();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key >= '0' && e.key <= '9') digit(e.key);
+      else if (e.key === '.')  dot();
+      else if (e.key === '+')  op('+');
+      else if (e.key === '-')  op('-');
+      else if (e.key === '*')  op('*');
+      else if (e.key === '/')  { e.preventDefault(); op('/'); }
+      else if (e.key === 'Enter' || e.key === '=') equals();
+      else if (e.key === 'Backspace') backspace();
+      else if (e.key === 'Escape') ac();
+    });
+  </script>
+</body>
+</html>

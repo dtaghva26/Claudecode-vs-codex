@@ -1,4 +1,5 @@
-claudecodescodes/
-codexcodes/
 AGENTS.md
 CLAUDE.md
+.claude/
+.codex/
+.agents/ 
