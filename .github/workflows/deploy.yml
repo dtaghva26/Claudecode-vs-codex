@@ -10,6 +10,7 @@ permissions:
   pages: write
   id-token: write
 
+
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -26,6 +27,8 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Stage index.html
         run: |
